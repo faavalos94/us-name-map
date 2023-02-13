@@ -5,6 +5,8 @@ install.packages("ggrepel")
 install.packages("maptools")
 install.packages("glue")
 install.packages("skimr")
+install.packages("showtext")
+install.packages("ggtext")
 library(tidyverse)
 library(usmap)
 library(sf)
@@ -12,6 +14,14 @@ library(ggrepel)
 library(maptools)
 library(glue)
 library(skimr)
+library(showtext)
+library(ggtext)
+
+font_add_google(family = "alegreya", "Alegreya SC")
+font_add_google(family = "lora", "Lora")
+
+showtext_auto()
+showtext_opts(dpi = 300)
 
 states_map <- us_map("states")
 states_map
@@ -82,17 +92,24 @@ fran_sm %>%
   geom_label_repel(aes(x=long,y=lat, 
                        label = paste("",region,"\n",total,"")), show.legend=FALSE,
                    min.segment.length = 0.10, max.overlaps = 51, force_pull=0.2,
-                   size=1.75) +
+                   size=1.75, family="lora") +
   theme(panel.background = element_rect(fill = "#646754", color="#646754"),
         plot.background = element_rect(fill="#646754", color="#646754"),
         panel.grid = element_blank(),
+        plot.title = element_text(color="#ececec", size=18, face="bold",
+                                  family="alegreya"),
+        plot.title.position = "plot",
+        plot.subtitle = element_text(color="#ececec", size=8,
+                                     family="lora"),
         axis.text = element_blank(),
         axis.title = element_blank(),
         axis.ticks = element_blank(),
         legend.background = element_blank(),
-        legend.text = element_text(face="bold"),
+        legend.text = element_text(face="bold", family="lora", color="#ececec"),
         legend.position = c(0.75,0.030),
         legend.direction = "horizontal",
-        legend.key.height = unit(0.15, "cm"))
+        legend.key.height = unit(0.15, "cm")) +
+  labs(title = "COUNT YOUR NAME!",
+       subtitle = "USA Name Count Data for 2019 - 2021")
 
 ggsave("code/usmap.png", width = 8, height = 4)
