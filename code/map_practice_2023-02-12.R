@@ -66,6 +66,9 @@ max_sm <- max(fran_sm$total)
 min_sm <- min(fran_sm$total)
 mid_sm <- round(max_sm/2,0)
 
+name_count <- name_data %>% filter(name == "Francisco") %>% count(name)
+name_title <- name_count$name
+
 ggplot(fran_map, aes(fill=total)) +
   geom_map(aes(map_id = region), map = states_map, color = "white", linewidth=0.25, show.legend=FALSE) +
   expand_limits(x=states_map$long, y=states_map$lat) +
@@ -109,7 +112,7 @@ fran_sm %>%
         legend.position = c(0.75,0.030),
         legend.direction = "horizontal",
         legend.key.height = unit(0.15, "cm")) +
-  labs(title = "COUNT YOUR NAME!",
+  labs(title = glue("COUNT YOUR NAME!: {name_title}"),
        subtitle = "USA Name Count Data for 2019 - 2021")
 
 ggsave("code/usmap.png", width = 8, height = 4)
