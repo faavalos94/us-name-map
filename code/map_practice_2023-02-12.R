@@ -39,50 +39,32 @@ centroids_sf <- df_sm %>%
 sm_center <- data.frame(centroids_sf$region, st_coordinates(centroids_sf)) %>% 
   rename(long=X, lat=Y, region = centroids_sf.region)
 
-ggplot(data = states_map, aes(x=long, y=lat, map_id = region)) +
-  geom_map(map = states_map, fill = "white", color = "black") +
-  coord_fixed() +
-  theme(panel.background = element_rect(fill = "black", color = "black"),
-        plot.background = element_rect(fill="black", color="black"),
-        panel.grid = element_blank(),
-        axis.text = element_blank(),
-        axis.title = element_blank(),
-        axis.ticks = element_blank())
-
 name_data <- read_csv("data/name_data.csv")
 skim_without_charts(name_data)
-fran_data <- name_data %>% filter(name == "Francisco")
-fran_data <- fran_data %>% select(-year) %>% group_by(state) %>% summarize(total = sum(year_total)) %>% 
+
+# Enter own name in filter() function to get own name data
+own_name <- name_data %>% filter(name == "Francisco")
+
+own_name <- own_name %>% select(-year) %>% group_by(state) %>% summarize(total = sum(year_total)) %>% 
   ungroup()
 
 states_only <- states_map %>% distinct(region)
 
-fran_map <- left_join(states_only, fran_data, by=c("region" = "state")) %>% 
+name_map <- left_join(states_only, own_name, by=c("region" = "state")) %>% 
   replace_na(list(total=0))
 
-fran_sm <- full_join(sm_center, fran_map, by="region")
+name_sm <- full_join(sm_center, name_map, by="region")
 
-max_sm <- max(fran_sm$total)
-min_sm <- min(fran_sm$total)
+max_sm <- max(name_sm$total)
+min_sm <- min(name_sm$total)
 mid_sm <- round(max_sm/2,0)
 
+# Enter own name in filter() function to get own name data
 name_count <- name_data %>% filter(name == "Francisco") %>% count(name)
 name_title <- name_count$name
 
-ggplot(fran_map, aes(fill=total)) +
-  geom_map(aes(map_id = region), map = states_map, color = "white", linewidth=0.25, show.legend=FALSE) +
-  expand_limits(x=states_map$long, y=states_map$lat) +
-  coord_fixed() +
-  scale_fill_gradient(low="#a6611a", high="#018571") +
-  theme(panel.background = element_rect(fill = "black", color="black"),
-        plot.background = element_rect(fill="black", color="black"),
-        panel.grid = element_blank(),
-        axis.text = element_blank(),
-        axis.title = element_blank(),
-        axis.ticks = element_blank())
-
-# constructing the map
-fran_sm %>% 
+# Constructing the map
+name_sm %>%
   ggplot(aes(fill=total)) + 
   geom_map(aes(map_id = region), map = states_map,
            color = "white", linewidth=0.25, show.legend=TRUE) + 
@@ -115,4 +97,4 @@ fran_sm %>%
   labs(title = glue("COUNT YOUR NAME!: {name_title}"),
        subtitle = "USA Name Count Data for 2019 - 2021")
 
-ggsave("code/usmap.png", width = 8, height = 4)
+ggsave("visuals/usmap.png", width = 8, height = 4)
