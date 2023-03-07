@@ -7,8 +7,8 @@ output:
     toc: yes
     toc_depth: 4
     code_folding: show
-    theme: cosmo
-    highlight: tango
+    theme: flatly
+    highlight: kate
 ---
 
 ```{r setup, include=FALSE}
@@ -22,7 +22,11 @@ knitr::opts_chunk$set(echo = TRUE,
                       )
 ```
 
-# Practice Run
+# Introduction
+
+This is a fun, quick project that will allow you to see how many times your name pops up on the US map from 2019-2021.
+
+# Loading Required Packages
 ```{r}
 library(tidyverse)
 library(usmap)
@@ -35,19 +39,27 @@ library(showtext)
 library(ggtext)
 ```
 
+# Loading Fonts from Google and Setting Image Parameters
 ```{r}
 font_add_google(family = "alegreya", "Alegreya SC")
 font_add_google(family = "lora", "Lora")
 
 showtext_auto()
 showtext_opts(dpi = 300)
+```
 
+# Constructing US Map Visualization
+
+## Reading in US States Data
+```{r}
 states_map <- us_map("states")
-states_map %>% head()
 
 states_map <- states_map %>% rename(region = abbr, long=x, lat=y)
 states_map %>% head()
+```
 
+## Data Frame Having Center Longitude and Latitude Coordinates
+```{r}
 df_sm <- st_as_sf(states_map, coords = c("long", "lat"))
 
 centroids_sf <- df_sm %>%
@@ -58,31 +70,56 @@ centroids_sf <- df_sm %>%
 sm_center <- data.frame(centroids_sf$region, st_coordinates(centroids_sf)) %>% 
   rename(long=X, lat=Y, region = centroids_sf.region)
 
+sm_center
+```
+
+## Reading in Name Data
+```{r}
 name_data <- read_csv("/cloud/project/data/name_data.csv")
 skim_without_charts(name_data)
+```
 
-# Enter own name in filter() function to get own name data
+
+## Enter Own Name in filter() Function to Get Own Name Data
+
+My name is **Francisco,** so I enter "Francisco"
+```{r}
 own_name <- name_data %>% filter(name == "Francisco")
 
 own_name <- own_name %>% select(-year) %>% group_by(state) %>% summarize(total = sum(year_total)) %>% 
   ungroup()
+```
 
+## Creating Data Frame to Build Our Name Map
+```{r}
 states_only <- states_map %>% distinct(region)
 
 name_map <- left_join(states_only, own_name, by=c("region" = "state")) %>% 
   replace_na(list(total=0))
 
 name_sm <- full_join(sm_center, name_map, by="region")
+```
 
+## Creating Parameters for Our Legend Breaks & Labels
+```{r}
 max_sm <- max(name_sm$total)
-min_sm <- min(name_sm$total)
+max_sm
 mid_sm <- round(max_sm/2,0)
+mid_sm
+min_sm <- min(name_sm$total)
+min_sm
+```
 
-# Enter own name in filter() function to get own name data
+# Enter Own Name in filter() Function to Get Own Name Data to Appear on the Title
+
+Once again, my name is **Francisco,** so I enter "Francisco"
+```{r}
 name_count <- name_data %>% filter(name == "Francisco") %>% count(name)
 name_title <- name_count$name
+```
 
 # Constructing the map
+```{r}
 name_sm %>%
   ggplot(aes(fill=total)) + 
   geom_map(aes(map_id = region), map = states_map,
