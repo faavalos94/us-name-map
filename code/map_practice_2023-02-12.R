@@ -30,30 +30,39 @@ states_map <- states_map %>% rename(region = abbr, long=x, lat=y)
 states_map %>% head()
 
 df_sm <- st_as_sf(states_map, coords = c("long", "lat"))
+df_sm
 
 centroids_sf <- df_sm %>%
   group_by(region) %>% 
   summarize(geometry = st_union(geometry)) %>%
   st_centroid()
+centroids_sf
 
 sm_center <- data.frame(centroids_sf$region, st_coordinates(centroids_sf)) %>% 
   rename(long=X, lat=Y, region = centroids_sf.region)
+sm_center
 
 name_data <- read_csv("data/name_data.csv")
 skim_without_charts(name_data)
+name_data
 
 # Enter own name in filter() function to get own name data
 own_name <- name_data %>% filter(name == "Francisco")
+own_name
 
 own_name <- own_name %>% select(-year) %>% group_by(state) %>% summarize(total = sum(year_total)) %>% 
   ungroup()
+own_name
 
 states_only <- states_map %>% distinct(region)
+states_only
 
 name_map <- left_join(states_only, own_name, by=c("region" = "state")) %>% 
   replace_na(list(total=0))
+name_map
 
 name_sm <- full_join(sm_center, name_map, by="region")
+name_sm
 
 max_sm <- max(name_sm$total)
 min_sm <- min(name_sm$total)
@@ -62,6 +71,8 @@ mid_sm <- round(max_sm/2,0)
 # Enter own name in filter() function to get own name data
 name_count <- name_data %>% filter(name == "Francisco") %>% count(name)
 name_title <- name_count$name
+name_count
+name_title
 
 # Constructing the map
 name_sm %>%
